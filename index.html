@@ -463,29 +463,68 @@
 
     const uploadedFiles = { receipt: null, qr: null };
 
-    function readFileAsDataUrl(file) {
+    function compressImageToDataUrl(file, maxDimension = 1280, quality = 0.8) {
       return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ dataUrl: reader.result, type: file.type, name: file.name });
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+          return;
+        }
+
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            let { width, height } = img;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            const cleanName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+            resolve({ dataUrl: compressedDataUrl, type: 'image/jpeg', name: cleanName });
+          };
+          img.src = event.target.result;
+        };
         reader.readAsDataURL(file);
       });
     }
 
     async function handleFileSelect(kind, file) {
       if (!file) return;
-      const dataUrl = await readFileAsDataUrl(file);
-      uploadedFiles[kind] = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl };
+      const compressed = await compressImageToDataUrl(file);
+      uploadedFiles[kind] = {
+        name: compressed.name,
+        type: compressed.type,
+        size: file.size,
+        dataUrl: compressed.dataUrl
+      };
 
       const previewEl = document.getElementById(kind === 'receipt' ? 'receiptPreview' : 'qrPreview');
       const thumbEl = document.getElementById(kind === 'receipt' ? 'receiptThumb' : 'qrThumb');
       const nameEl = document.getElementById(kind === 'receipt' ? 'receiptFileName' : 'qrFileName');
       const sizeEl = document.getElementById(kind === 'receipt' ? 'receiptFileSize' : 'qrFileSize');
 
-      nameEl.textContent = file.name;
+      nameEl.textContent = compressed.name;
       sizeEl.textContent = `${(file.size / 1024).toFixed(1)} KB`;
-      if (file.type.startsWith('image/')) {
-        thumbEl.src = dataUrl;
+      if (compressed.type.startsWith('image/')) {
+        thumbEl.src = compressed.dataUrl;
         thumbEl.style.display = 'block';
       } else {
         thumbEl.removeAttribute('src');
@@ -531,31 +570,15 @@
     }
 
     async function sendRefundPostRequest(payload) {
-      const response = await fetch(APPS_SCRIPT_URL, {
+      await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
+        mode: 'no-cors',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         },
         body: JSON.stringify(payload)
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
-      }
-
-      const rawText = await response.text();
-      try {
-        const parsed = JSON.parse(rawText);
-        if (parsed.status && parsed.status !== 'success') {
-          throw new Error(parsed.message || 'Apps Script returned an error');
-        }
-        return parsed;
-      } catch (parseErr) {
-        if (parseErr instanceof SyntaxError) {
-          return { status: 'success', rawText };
-        }
-        throw parseErr;
-      }
+      return { status: 'success' };
     }
 
     const form = document.getElementById('refundForm');
