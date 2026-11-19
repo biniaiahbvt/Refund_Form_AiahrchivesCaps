@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIAHRCHIVES — Caps Refund Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --locker-blue: #6e99ba;
+      --locker-dark: #4f7694;
+      --locker-light: #8bb4d3;
+      --paper-bg: #f7f6f2;
+      --grid-line: rgba(110, 153, 186, 0.16);
+      --ink: #121820;
+      --muted: #556270;
+      --teal: #3f788a;
+      --teal-dark: #2b5866;
+      --sky: #55a7d9;
+      --border: #1e2933;
+      --danger: #b91c1c;
+      --success: #15803d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      background-color: var(--locker-blue);
+      background-image:
+        linear-gradient(90deg, transparent 0%, transparent calc(25% - 2px), rgba(24, 39, 52, 0.35) calc(25% - 2px), rgba(24, 39, 52, 0.35) 25%, rgba(255, 255, 255, 0.16) 25%, rgba(255, 255, 255, 0.16) calc(25% + 2px), transparent calc(25% + 2px)),
+        linear-gradient(90deg, transparent 0%, transparent calc(50% - 2px), rgba(24, 39, 52, 0.35) calc(50% - 2px), rgba(24, 39, 52, 0.35) 50%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0.16) calc(50% + 2px), transparent calc(50% + 2px)),
+        linear-gradient(90deg, transparent 0%, transparent calc(75% - 2px), rgba(24, 39, 52, 0.35) calc(75% - 2px), rgba(24, 39, 52, 0.35) 75%, rgba(255, 255, 255, 0.16) 75%, rgba(255, 255, 255, 0.16) calc(75% + 2px), transparent calc(75% + 2px)),
+        linear-gradient(180deg, var(--locker-light) 0%, var(--locker-blue) 45%, var(--locker-dark) 100%);
+      padding: 28px 16px 64px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .locker-hardware { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .locker-vent {
+      position: absolute; width: 68px; height: 44px; background: #3d627d;
+      border: 2px solid rgba(20, 35, 48, 0.45); border-radius: 3px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+      display: flex; flex-direction: column; justify-content: space-evenly; padding: 4px 6px;
+    }
+    .locker-vent span { display: block; height: 3px; background: #1c2f3d; border-radius: 1px; }
+    .vent-top-left { top: 24px; left: 12%; }
+    .vent-top-mid { top: 24px; left: 37%; }
+    .vent-top-right { top: 24px; left: 62%; }
+    .vent-top-far { top: 24px; left: 87%; }
+    .vent-bot-left { bottom: 26px; left: 12%; }
+    .vent-bot-mid { bottom: 26px; left: 37%; }
+    .vent-bot-right { bottom: 26px; left: 62%; }
+    .vent-bot-far { bottom: 26px; left: 87%; }
+
+    .locker-handle {
+      position: fixed; left: 16px; top: 52%; transform: translateY(-50%);
+      width: 34px; height: 78px; background: linear-gradient(180deg, #98afc2, #5e788d);
+      border: 2px solid #243644; border-radius: 6px;
+      box-shadow: 3px 4px 10px rgba(0, 0, 0, 0.35); z-index: 1; pointer-events: none;
+    }
+
+    .top-badge {
+      position: relative; z-index: 3; max-width: 820px; margin: 0 auto 10px;
+      display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .bini-tag {
+      background: rgba(255, 255, 255, 0.92); color: var(--teal-dark);
+      font-family: 'Archivo Black', sans-serif; font-size: 11px; line-height: 1.05;
+      padding: 7px 11px; border-radius: 4px; border: 2px solid var(--border);
+      box-shadow: 3px 3px 0 rgba(18, 24, 32, 0.35); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    .notebook-shell {
+      position: relative; z-index: 2; max-width: 820px; margin: 0 auto; display: flex;
+      filter: drop-shadow(0 20px 36px rgba(13, 25, 36, 0.45));
+    }
+    .spiral-spine {
+      width: 36px; flex-shrink: 0;
+      background: linear-gradient(90deg, #dcd9cf 0%, #efede6 60%, #cfc9bb 100%);
+      border-top-left-radius: 8px; border-bottom-left-radius: 8px;
+      border: 2px solid var(--border); border-right: none;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 18px 0;
+    }
+    .spiral-ring {
+      width: 44px; height: 11px; margin-left: -14px; border-radius: 999px;
+      background: linear-gradient(180deg, #3a434c 0%, #11161b 55%, #596570 100%);
+      border: 1.5px solid #0b0e12; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .notebook-page {
+      flex: 1; background-color: var(--paper-bg);
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 22px 22px;
+      border: 2px solid var(--border); border-radius: 0 8px 8px 0;
+      padding: 28px 32px 38px; position: relative;
+    }
+
+    .paperclip-cart {
+      position: absolute; top: -18px; right: 26px; display: flex; align-items: center; gap: 6px;
+      background: var(--sky); color: #ffffff; border: 2px solid var(--border); border-radius: 6px;
+      padding: 8px 12px; box-shadow: 4px 4px 0 var(--border); transform: rotate(3deg);
+      font-family: 'Archivo Black', sans-serif; font-size: 12px; letter-spacing: 0.03em;
+    }
+    .paperclip-cart::before {
+      content: ""; position: absolute; top: -22px; right: 12px; width: 14px; height: 30px;
+      border: 3px solid #95a5b3; border-bottom: none; border-radius: 10px 10px 0 0; z-index: -1;
+    }
+
+    .brand-header {
+      border-bottom: 3px solid var(--border); padding-bottom: 16px; margin-bottom: 22px;
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+    }
+    .brand-title {
+      font-family: 'Archivo Black', sans-serif; font-size: clamp(28px, 5vw, 42px);
+      line-height: 0.96; letter-spacing: -0.02em; color: var(--teal); margin: 0; text-transform: uppercase;
+    }
+    .brand-tagline {
+      font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted);
+      margin: 6px 0 0; font-style: italic;
+    }
+    .refund-pill {
+      background: var(--ink); color: #fff; font-family: 'Space Mono', monospace;
+      font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 3px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    .section-block {
+      background: rgba(255, 255, 255, 0.84); border: 2px solid var(--border); border-radius: 5px;
+      padding: 18px 20px; margin-bottom: 20px; box-shadow: 4px 4px 0 rgba(18, 24, 32, 0.14);
+    }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 8px; background: var(--teal); color: #fff;
+      font-family: 'Archivo Black', sans-serif; font-size: 12px; text-transform: uppercase;
+      letter-spacing: 0.04em; padding: 4px 10px; border: 1.5px solid var(--border); margin-bottom: 14px;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .notebook-page { padding: 22px 16px 30px; }
+      .spiral-spine { width: 24px; }
+      .spiral-ring { width: 30px; margin-left: -10px; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label.field-label { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .req { color: var(--danger); font-weight: 800; }
+    .hint { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+
+    input[type="text"], input[type="email"], input[type="tel"], select, textarea {
+      width: 100%; padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: var(--ink); background: #ffffff; border: 2px solid var(--border); border-radius: 4px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(63, 120, 138, 0.22);
+    }
+    textarea { min-height: 76px; resize: vertical; }
+
+    .cap-list { display: flex; flex-direction: column; gap: 10px; }
+    .cap-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: #fff; border: 1.5px solid var(--border); border-radius: 4px; padding: 10px 12px; flex-wrap: wrap;
+    }
+    .cap-name { font-weight: 700; font-size: 13.5px; line-height: 1.3; }
+    .cap-meta { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--muted); }
+    .qty-control {
+      display: inline-flex; align-items: center; border: 2px solid var(--border);
+      border-radius: 4px; overflow: hidden; background: var(--paper-bg);
+    }
+    .qty-btn {
+      width: 32px; height: 32px; border: none; background: #e6ecf0; color: var(--ink);
+      font-weight: 800; font-size: 16px; cursor: pointer;
+    }
+    .qty-btn:hover { background: #cbd8e0; }
+    .qty-val {
+      width: 38px; text-align: center; font-family: 'Space Mono', monospace;
+      font-weight: 700; font-size: 14px; border: none; background: #fff; color: var(--ink); padding: 4px 0;
+    }
+
+    .payout-mode-box {
+      margin-top: 12px; padding: 14px; background: #f1f6f9;
+      border: 1.5px dashed var(--teal); border-radius: 4px;
+    }
+    .upload-box {
+      border: 2px dashed var(--border); border-radius: 5px; background: #fff;
+      padding: 14px; text-align: center; cursor: pointer;
+    }
+    .upload-box:hover, .upload-box.dragover { background: #eef6fa; border-color: var(--teal); }
+    .upload-box input[type="file"] { display: none; }
+
+    .preview-card {
+      margin-top: 10px; display: none; align-items: center; gap: 12px;
+      background: #f8fafc; border: 1.5px solid var(--border); border-radius: 4px; padding: 8px 10px;
+    }
+    .preview-card.active { display: flex; }
+    .preview-thumb {
+      width: 56px; height: 56px; object-fit: cover; border-radius: 4px;
+      border: 1px solid var(--border); background: #fff;
+    }
+    .preview-meta { flex: 1; text-align: left; font-size: 12px; overflow: hidden; }
+    .preview-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .remove-file-btn {
+      background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5;
+      border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+
+    .total-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 20px;
+    }
+    .total-tag {
+      background: var(--teal); color: #fff; border: 2px solid var(--border);
+      box-shadow: 5px 5px 0 var(--border); padding: 12px 20px; transform: rotate(-1.5deg);
+    }
+    .total-tag-sub { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+    .total-tag-amount { font-family: 'Archivo Black', sans-serif; font-size: 28px; line-height: 1.1; }
+
+    .submit-btn {
+      background: var(--ink); color: #fff; font-family: 'Archivo Black', sans-serif;
+      font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; padding: 14px 26px;
+      border: 2px solid var(--border); border-radius: 5px; box-shadow: 5px 5px 0 var(--teal); cursor: pointer;
+    }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .status-msg { margin-top: 12px; padding: 12px 14px; border-radius: 4px; font-size: 13.5px; font-weight: 600; display: none; }
+    .status-msg.error { display: block; background: #fef2f2; color: var(--danger); border: 1.5px solid #f87171; }
+    .status-msg.success { display: block; background: #f0fdf4; color: var(--success); border: 1.5px solid #4ade80; }
+
+    .admin-bar {
+      margin-top: 24px; padding-top: 16px; border-top: 2px dashed rgba(18, 24, 32, 0.25);
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      flex-wrap: wrap; font-size: 12px; color: var(--muted);
+    }
+    .secondary-btn {
+      background: #fff; color: var(--ink); border: 1.5px solid var(--border);
+      border-radius: 4px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(10, 18, 26, 0.72); display: none;
+      align-items: center; justify-content: center; padding: 18px; z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #fff; border: 2px solid var(--border); border-radius: 6px;
+      max-width: 740px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 22px;
+      box-shadow: 8px 8px 0 var(--border);
+    }
+    pre.code-block {
+      background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 4px;
+      font-family: 'Space Mono', monospace; font-size: 11.5px; overflow-x: auto; white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <div class="locker-hardware" aria-hidden="true">
+    <div class="locker-vent vent-top-left"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-top-mid"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-top-right"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-top-far"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-bot-left"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-bot-mid"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-bot-right"><span></span><span></span><span></span></div>
+    <div class="locker-vent vent-bot-far"><span></span><span></span><span></span></div>
+  </div>
+  <div class="locker-handle" aria-hidden="true"></div>
+
+  <div class="top-badge">
+    <span class="bini-tag">BINI AIAH • CAPS REFUND</span>
+  </div>
+
+  <div class="notebook-shell">
+    <div class="spiral-spine" id="spiralSpine" aria-hidden="true"></div>
+
+    <main class="notebook-page">
+      <div class="paperclip-cart" aria-hidden="true">
+        <span>🛒</span>
+        <span>REFUND</span>
+      </div>
+
+      <header class="brand-header">
+        <div>
+          <h1 class="brand-title">AIAHRCHIVES</h1>
+          <p class="brand-tagline">"ARCHIVES YOU'LL NEVER FORGET." — CAPS PRE-ORDER REFUND REQUEST</p>
+        </div>
+        <div class="refund-pill">₱399.00 / CAP</div>
+      </header>
+
+      <form id="refundForm" novalidate>
+        <section class="section-block">
+          <div class="section-label">1. Buyer &amp; Order Details</div>
+          <div class="grid-2">
+            <div class="field">
+              <label class="field-label" for="fullName">Full Name <span class="req">*</span></label>
+              <input type="text" id="fullName" name="fullName" placeholder="e.g., Maria Clara Santos" required />
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="email">Email Address <span class="req">*</span></label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" required />
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="xUsername">X (Twitter) Username</label>
+              <input type="text" id="xUsername" name="xUsername" placeholder="@yourusername" />
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="orderRef">Original Order Reference / Submission ID</label>
+              <input type="text" id="orderRef" name="orderRef" placeholder="e.g., 2047254922434 or Submission ID" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-label">2. Cap Order to Refund <span class="req">*</span></div>
+          <p class="hint" style="margin: 0 0 12px;">Select the quantity (1 or more total) for each cap variant being refunded. Each cap is ₱399.00.</p>
+          <div class="cap-list" id="capList"></div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-label">3. Refund Payout Details</div>
+          <div class="grid-2">
+            <div class="field full">
+              <label class="field-label" for="modeOfPayment">Mode of Payment (Refund Channel) <span class="req">*</span></label>
+              <select id="modeOfPayment" name="modeOfPayment" required>
+                <option value="">— Select Mode of Payment —</option>
+                <option value="GCASH">GCash</option>
+                <option value="BPI">BPI</option>
+                <option value="MARIBANK">MariBank</option>
+                <option value="MAYA">Maya</option>
+                <option value="OTHER">Other Bank / E-Wallet</option>
+              </select>
+            </div>
+
+            <div class="field full" id="otherChannelWrap" style="display: none;">
+              <label class="field-label" for="otherChannel">Specify Bank / E-Wallet Name <span class="req">*</span></label>
+              <input type="text" id="otherChannel" name="otherChannel" placeholder="e.g., BDO, UnionBank, GoTyme" />
+            </div>
+          </div>
+
+          <div class="payout-mode-box">
+            <div class="grid-2">
+              <div class="field">
+                <label class="field-label" for="accountNumber">Mobile / Bank Account Number <span class="hint">(Optional if uploading QR)</span></label>
+                <input type="text" id="accountNumber" name="accountNumber" placeholder="e.g., 0917 123 4567 or Account #" />
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="accountName">Account Holder Name <span class="hint">(Recommended)</span></label>
+                <input type="text" id="accountName" name="accountName" placeholder="Name registered on account/QR" />
+              </div>
+
+              <div class="field full">
+                <label class="field-label">Upload Receiving QR Code <span class="hint">(Optional — upload if you prefer QR payout instead of typing an account number)</span></label>
+                <div class="upload-box" id="qrDropZone">
+                  <input type="file" id="qrFile" accept="image/*,application/pdf" />
+                  <div style="font-weight: 700; font-size: 13px;">Tap or drag &amp; drop QR Code image here</div>
+                  <div class="hint">PNG, JPG, WEBP, or PDF • Saved to Caps Refund Drive folder</div>
+                </div>
+                <div class="preview-card" id="qrPreview">
+                  <img id="qrThumb" class="preview-thumb" alt="QR preview" />
+                  <div class="preview-meta">
+                    <div class="preview-name" id="qrFileName"></div>
+                    <div class="hint" id="qrFileSize"></div>
+                  </div>
+                  <button type="button" class="remove-file-btn" id="removeQrBtn">Remove</button>
+                </div>
+              </div>
+            </div>
+            <p class="hint" style="margin: 10px 0 0;">Provide at least a Mobile/Bank Account Number OR a QR Code upload.</p>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-label">4. Receipt / Proof of Payment <span class="req">*</span></div>
+          <div class="upload-box" id="receiptDropZone">
+            <input type="file" id="receiptFile" accept="image/*,application/pdf" required />
+            <div style="font-weight: 700; font-size: 13.5px;">Tap or drag &amp; drop your Pre-Order Receipt here <span class="req">*</span></div>
+            <div class="hint">Required • Image or PDF receipt stored in the designated Google Drive folder</div>
+          </div>
+          <div class="preview-card" id="receiptPreview">
+            <img id="receiptThumb" class="preview-thumb" alt="Receipt preview" />
+            <div class="preview-meta">
+              <div class="preview-name" id="receiptFileName"></div>
+              <div class="hint" id="receiptFileSize"></div>
+            </div>
+            <button type="button" class="remove-file-btn" id="removeReceiptBtn">Remove</button>
+          </div>
+
+          <div class="field full" style="margin-top: 14px;">
+            <label class="field-label" for="reason">Refund Reason / Notes</label>
+            <textarea id="reason" name="reason" placeholder="Optional details about your refund request..."></textarea>
+          </div>
+        </section>
+
+        <div class="total-banner">
+          <div class="total-tag">
+            <div class="total-tag-sub">Total Refund Amount (<span id="totalCapsCount">0</span> Cap(s))</div>
+            <div class="total-tag-amount" id="totalRefundDisplay">₱0.00</div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">Submit Refund Request</button>
+        </div>
+
+        <div class="status-msg" id="statusMsg" role="alert"></div>
+      </form>
+
+      <div class="admin-bar">
+        <span>Connected target: <strong>Caps Refund</strong> tab • Designated Caps Refund Drive folder</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="secondary-btn" id="openScriptModalBtn">View Apps Script &amp; Sheet Formulas</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="scriptModal" aria-hidden="true">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 18px;">Google Apps Script (<code>Code.gs</code>) &amp; Sheet Formulas</h2>
+        <button type="button" class="secondary-btn" id="closeScriptModalBtn">Close</button>
+      </div>
+      <p style="font-size: 13px; color: #334155;">
+        Paste this into <strong>Extensions &gt; Apps Script</strong> on your spreadsheet, then deploy as a Web App.
+      </p>
+      <pre class="code-block" id="appsScriptCode"></pre>
+      <h3 style="font-size: 14px; margin: 16px 0 6px;">Sheet Formula Logic (Item Summary &amp; Miscellaneous)</h3>
+      <p style="font-size: 12.5px; color: #334155; margin: 0 0 8px;">
+        In <strong>Item Summary</strong>, subtract matching refunded cap quantities from the <strong>Caps Refund</strong> tab using <code>SUMIFS</code>. In <strong>Miscellaneous</strong>, subtract total refunded pesos from Gross Merchandise Revenue.
+      </p>
+      <pre class="code-block">=EXISTING_ITEM_QTY_FORMULA - SUMIFS('Caps Refund'!$F$2:$F, 'Caps Refund'!$E$2:$E, B12)
+=EXISTING_GROSS_REVENUE_FORMULA - SUM('Caps Refund'!$G$2:$G)</pre>
+    </div>
+  </div>
+  <script>
+    const CAP_VARIANTS = [
+      { id: 'light-blue-navy-surfer', name: 'AIAHRCHIVES - LIGHT BLUE & NAVY BLUE DAD HAT', variant: 'VERSION 1 - SURFER', price: 399 },
+      { id: 'light-blue-navy-traveler', name: 'AIAHRCHIVES - LIGHT BLUE & NAVY BLUE DAD HAT', variant: 'VERSION 2 - TRAVELER', price: 399 },
+      { id: 'khaki-choc-surfer', name: 'AIAHRCHIVES - KHAKI & CHOCOLATE BROWN DAD HAT', variant: 'VERSION 1 - SURFER', price: 399 },
+      { id: 'khaki-choc-traveler', name: 'AIAHRCHIVES - KHAKI & CHOCOLATE BROWN DAD HAT', variant: 'VERSION 2 - TRAVELER', price: 399 }
+    ];
+
+    const APPS_SCRIPT_URL = '';
+
+    const spineEl = document.getElementById('spiralSpine');
+    for (let i = 0; i < 24; i++) {
+      const ring = document.createElement('div');
+      ring.className = 'spiral-ring';
+      spineEl.appendChild(ring);
+    }
+
+    const capListEl = document.getElementById('capList');
+    const quantities = {};
+    CAP_VARIANTS.forEach((cap) => {
+      quantities[cap.id] = 0;
+      const row = document.createElement('div');
+      row.className = 'cap-row';
+      row.innerHTML = `
+        <div>
+          <div class="cap-name">${cap.name}</div>
+          <div class="cap-meta">Color/Version: ${cap.variant} • ₱${cap.price.toFixed(2)}</div>
+        </div>
+        <div class="qty-control">
+          <button type="button" class="qty-btn" data-action="dec" data-id="${cap.id}" aria-label="Decrease quantity">−</button>
+          <input type="text" class="qty-val" id="qty-${cap.id}" value="0" readonly />
+          <button type="button" class="qty-btn" data-action="inc" data-id="${cap.id}" aria-label="Increase quantity">+</button>
+        </div>
+      `;
+      capListEl.appendChild(row);
+    });
+
+    function updateTotals() {
+      let totalQty = 0;
+      let totalAmount = 0;
+      CAP_VARIANTS.forEach((cap) => {
+        const q = quantities[cap.id] || 0;
+        totalQty += q;
+        totalAmount += q * cap.price;
+      });
+      document.getElementById('totalCapsCount').textContent = totalQty;
+      document.getElementById('totalRefundDisplay').textContent =
+        `₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return { totalQty, totalAmount };
+    }
+
+    capListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.qty-btn');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const current = quantities[id] || 0;
+      if (btn.dataset.action === 'inc') quantities[id] = current + 1;
+      else if (btn.dataset.action === 'dec' && current > 0) quantities[id] = current - 1;
+      document.getElementById(`qty-${id}`).value = quantities[id];
+      updateTotals();
+    });
+
+    const modeSelect = document.getElementById('modeOfPayment');
+    const otherWrap = document.getElementById('otherChannelWrap');
+    const otherInput = document.getElementById('otherChannel');
+    modeSelect.addEventListener('change', () => {
+      const isOther = modeSelect.value === 'OTHER';
+      otherWrap.style.display = isOther ? 'flex' : 'none';
+      otherInput.required = isOther;
+    });
+
+    const uploadedFiles = { receipt: null, qr: null };
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFileSelect(kind, file) {
+      if (!file) return;
+      const dataUrl = await readFileAsDataUrl(file);
+      uploadedFiles[kind] = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl };
+
+      const previewEl = document.getElementById(kind === 'receipt' ? 'receiptPreview' : 'qrPreview');
+      const thumbEl = document.getElementById(kind === 'receipt' ? 'receiptThumb' : 'qrThumb');
+      const nameEl = document.getElementById(kind === 'receipt' ? 'receiptFileName' : 'qrFileName');
+      const sizeEl = document.getElementById(kind === 'receipt' ? 'receiptFileSize' : 'qrFileSize');
+
+      nameEl.textContent = file.name;
+      sizeEl.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+      if (file.type.startsWith('image/')) {
+        thumbEl.src = dataUrl;
+        thumbEl.style.display = 'block';
+      } else {
+        thumbEl.removeAttribute('src');
+        thumbEl.style.display = 'none';
+      }
+      previewEl.classList.add('active');
+    }
+
+    function clearFile(kind) {
+      uploadedFiles[kind] = null;
+      document.getElementById(kind === 'receipt' ? 'receiptFile' : 'qrFile').value = '';
+      document.getElementById(kind === 'receipt' ? 'receiptPreview' : 'qrPreview').classList.remove('active');
+    }
+
+    function setupDropZone(zoneId, inputId, kind) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+      zone.addEventListener('click', () => input.click());
+      input.addEventListener('change', () => {
+        if (input.files && input.files[0]) handleFileSelect(kind, input.files[0]);
+      });
+      ['dragenter', 'dragover'].forEach((evt) => {
+        zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach((evt) => {
+        zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove('dragover'); });
+      });
+      zone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (file) handleFileSelect(kind, file);
+      });
+    }
+
+    setupDropZone('receiptDropZone', 'receiptFile', 'receipt');
+    setupDropZone('qrDropZone', 'qrFile', 'qr');
+    document.getElementById('removeReceiptBtn').addEventListener('click', () => clearFile('receipt'));
+    document.getElementById('removeQrBtn').addEventListener('click', () => clearFile('qr'));
+
+    const statusMsg = document.getElementById('statusMsg');
+    function showStatus(type, text) {
+      statusMsg.className = `status-msg ${type}`;
+      statusMsg.textContent = text;
+    }
+
+    const form = document.getElementById('refundForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-msg';
+
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const xUsername = document.getElementById('xUsername').value.trim();
+      const orderRef = document.getElementById('orderRef').value.trim();
+      const modeVal = modeSelect.value;
+      const otherChannel = otherInput.value.trim();
+      const finalMode = modeVal === 'OTHER' ? otherChannel : modeVal;
+      const accountNumber = document.getElementById('accountNumber').value.trim();
+      const accountName = document.getElementById('accountName').value.trim();
+      const reason = document.getElementById('reason').value.trim();
+      const { totalQty, totalAmount } = updateTotals();
+
+      if (!fullName || !email || !email.includes('@')) {
+        showStatus('error', 'Please enter your Full Name and a valid Email Address.');
+        return;
+      }
+      if (totalQty < 1) {
+        showStatus('error', 'Please select at least 1 cap to refund.');
+        return;
+      }
+      if (!modeVal || (modeVal === 'OTHER' && !otherChannel)) {
+        showStatus('error', 'Please select your Mode of Payment.');
+        return;
+      }
+      if (!accountNumber && !uploadedFiles.qr) {
+        showStatus('error', 'Please enter your Mobile/Bank Account Number OR upload a QR Code image.');
+        return;
+      }
+      if (!uploadedFiles.receipt) {
+        showStatus('error', 'Please upload your Receipt / Proof of Payment.');
+        return;
+      }
+
+      const selectedCaps = CAP_VARIANTS
+        .filter((c) => quantities[c.id] > 0)
+        .map((c) => ({
+          id: c.id, name: c.name, variant: c.variant,
+          quantity: quantities[c.id], unitPrice: c.price, subtotal: quantities[c.id] * c.price
+        }));
+
+      const payload = {
+        submittedAt: new Date().toISOString(),
+        fullName, email, xUsername, orderRef,
+        modeOfPayment: finalMode, accountNumber, accountName,
+        qrFile: uploadedFiles.qr, receiptFile: uploadedFiles.receipt,
+        selectedCaps, totalQty, totalAmount, reason
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        if (APPS_SCRIPT_URL) {
+          await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+        showStatus(
+          'success',
+          `Refund request recorded for ${fullName} (${totalQty} cap(s), ₱${totalAmount.toFixed(2)} via ${finalMode}). ${
+            APPS_SCRIPT_URL
+              ? 'Sent to Google Apps Script for Drive upload & Caps Refund sheet logging.'
+              : 'Add your deployed Apps Script Web App URL in APPS_SCRIPT_URL to send live data automatically.'
+          }`
+        );
+        form.reset();
+        CAP_VARIANTS.forEach((c) => { quantities[c.id] = 0; document.getElementById(`qty-${c.id}`).value = '0'; });
+        clearFile('receipt'); clearFile('qr');
+        otherWrap.style.display = 'none';
+        updateTotals();
+      } catch (err) {
+        showStatus('error', `Submission failed: ${err.message}`);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Refund Request';
+      }
+    });
+
+    const APPS_SCRIPT_TEMPLATE = `const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID';
+const REFUND_FOLDER_ID = 'YOUR_REFUND_FOLDER_ID';
+const REFUND_SHEET_NAME = 'Caps Refund';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const folder = DriveApp.getFolderById(REFUND_FOLDER_ID);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = ss.getSheetByName(REFUND_SHEET_NAME);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(REFUND_SHEET_NAME);
+      sheet.appendRow([
+        'Timestamp', 'Full Name', 'Email', 'X Username', 'Order Ref',
+        'Cap Variant', 'Refunded Qty', 'Refund Amount (PHP)',
+        'Mode of Payment', 'Account Number', 'Account Name',
+        'QR Code Link', 'Receipt Link', 'Reason'
+      ]);
+    }
+
+    const receiptUrl = saveBase64ToFolder(folder, data.receiptFile, data.fullName + '_Receipt');
+    const qrUrl = data.qrFile ? saveBase64ToFolder(folder, data.qrFile, data.fullName + '_QR') : '';
+
+    (data.selectedCaps || []).forEach((cap) => {
+      sheet.appendRow([
+        data.submittedAt || new Date().toISOString(),
+        data.fullName, data.email, data.xUsername || '', data.orderRef || '',
+        cap.name + ' (' + cap.variant + ')', cap.quantity, cap.subtotal,
+        data.modeOfPayment, data.accountNumber || '', data.accountName || '',
+        qrUrl, receiptUrl, data.reason || ''
+      ]);
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function saveBase64ToFolder(folder, fileObj, prefix) {
+  if (!fileObj || !fileObj.dataUrl) return '';
+  const parts = fileObj.dataUrl.split(',');
+  const bytes = Utilities.base64Decode(parts[1]);
+  const blob = Utilities.newBlob(bytes, fileObj.type || 'application/octet-stream', prefix + '_' + (fileObj.name || 'upload'));
+  return folder.createFile(blob).getUrl();
+}`;
+
+    document.getElementById('appsScriptCode').textContent = APPS_SCRIPT_TEMPLATE;
+
+    const modal = document.getElementById('scriptModal');
+    document.getElementById('openScriptModalBtn').addEventListener('click', () => {
+      modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+    });
+    document.getElementById('closeScriptModalBtn').addEventListener('click', () => {
+      modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); }
+    });
+  </script>
+</body>
+</html>
+
