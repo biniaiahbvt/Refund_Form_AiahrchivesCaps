@@ -240,25 +240,6 @@
       display: flex; justify-content: space-between; align-items: center; gap: 10px;
       flex-wrap: wrap; font-size: 12px; color: var(--muted);
     }
-    .secondary-btn {
-      background: #fff; color: var(--ink); border: 1.5px solid var(--border);
-      border-radius: 4px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
-    }
-
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(10, 18, 26, 0.72); display: none;
-      align-items: center; justify-content: center; padding: 18px; z-index: 50;
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal-card {
-      background: #fff; border: 2px solid var(--border); border-radius: 6px;
-      max-width: 740px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 22px;
-      box-shadow: 8px 8px 0 var(--border);
-    }
-    pre.code-block {
-      background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 4px;
-      font-family: 'Space Mono', monospace; font-size: 11.5px; overflow-x: auto; white-space: pre;
-    }
   </style>
 </head>
 <body>
@@ -417,32 +398,10 @@
 
       <div class="admin-bar">
         <span>Connected target: <strong>Caps Refund</strong> tab • Designated Caps Refund Drive folder</span>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="secondary-btn" id="openScriptModalBtn">View Apps Script &amp; Sheet Formulas</button>
-        </div>
       </div>
     </main>
   </div>
-
-  <div class="modal-backdrop" id="scriptModal" aria-hidden="true">
-    <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
-        <h2 style="margin: 0; font-size: 18px;">Google Apps Script (<code>Code.gs</code>) &amp; Sheet Formulas</h2>
-        <button type="button" class="secondary-btn" id="closeScriptModalBtn">Close</button>
-      </div>
-      <p style="font-size: 13px; color: #334155;">
-        Paste this into <strong>Extensions &gt; Apps Script</strong> on your spreadsheet, then deploy as a Web App.
-      </p>
-      <pre class="code-block" id="appsScriptCode"></pre>
-      <h3 style="font-size: 14px; margin: 16px 0 6px;">Sheet Formula Logic (Item Summary &amp; Miscellaneous)</h3>
-      <p style="font-size: 12.5px; color: #334155; margin: 0 0 8px;">
-        In <strong>Item Summary</strong>, subtract matching refunded cap quantities from the <strong>Caps Refund</strong> tab using <code>SUMIFS</code>. In <strong>Miscellaneous</strong>, subtract total refunded pesos from Gross Merchandise Revenue.
-      </p>
-      <pre class="code-block">=EXISTING_ITEM_QTY_FORMULA - SUMIFS('Caps Refund'!$F$2:$F, 'Caps Refund'!$E$2:$E, B12)
-=EXISTING_GROSS_REVENUE_FORMULA - SUM('Caps Refund'!$G$2:$G)</pre>
-    </div>
-  </div>
-  <script>
+    <script>
     const CAP_VARIANTS = [
       { id: 'light-blue-navy-surfer', name: 'AIAHRCHIVES - LIGHT BLUE & NAVY BLUE DAD HAT', variant: 'VERSION 1 - SURFER', price: 399 },
       { id: 'light-blue-navy-traveler', name: 'AIAHRCHIVES - LIGHT BLUE & NAVY BLUE DAD HAT', variant: 'VERSION 2 - TRAVELER', price: 399 },
@@ -668,68 +627,6 @@
         submitBtn.textContent = 'Submit Refund Request';
       }
     });
-
-    const APPS_SCRIPT_TEMPLATE = `const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID';
-const REFUND_FOLDER_ID = 'YOUR_REFUND_FOLDER_ID';
-const REFUND_SHEET_NAME = 'Caps Refund';
-
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const folder = DriveApp.getFolderById(REFUND_FOLDER_ID);
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let sheet = ss.getSheetByName(REFUND_SHEET_NAME);
-
-    if (!sheet) {
-      sheet = ss.insertSheet(REFUND_SHEET_NAME);
-      sheet.appendRow([
-        'Timestamp', 'Full Name', 'Email', 'X Username', 'Order Ref',
-        'Cap Variant', 'Refunded Qty', 'Refund Amount (PHP)',
-        'Mode of Payment', 'Account Number', 'Account Name',
-        'QR Code Link', 'Receipt Link', 'Reason'
-      ]);
-    }
-
-    const receiptUrl = saveBase64ToFolder(folder, data.receiptFile, data.fullName + '_Receipt');
-    const qrUrl = data.qrFile ? saveBase64ToFolder(folder, data.qrFile, data.fullName + '_QR') : '';
-
-    (data.selectedCaps || []).forEach((cap) => {
-      sheet.appendRow([
-        data.submittedAt || new Date().toISOString(),
-        data.fullName, data.email, data.xUsername || '', data.orderRef || '',
-        cap.name + ' (' + cap.variant + ')', cap.quantity, cap.subtotal,
-        data.modeOfPayment, data.accountNumber || '', data.accountName || '',
-        qrUrl, receiptUrl, data.reason || ''
-      ]);
-    });
-
-    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.message })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function saveBase64ToFolder(folder, fileObj, prefix) {
-  if (!fileObj || !fileObj.dataUrl) return '';
-  const parts = fileObj.dataUrl.split(',');
-  const bytes = Utilities.base64Decode(parts[1]);
-  const blob = Utilities.newBlob(bytes, fileObj.type || 'application/octet-stream', prefix + '_' + (fileObj.name || 'upload'));
-  return folder.createFile(blob).getUrl();
-}`;
-
-    document.getElementById('appsScriptCode').textContent = APPS_SCRIPT_TEMPLATE;
-
-    const modal = document.getElementById('scriptModal');
-    document.getElementById('openScriptModalBtn').addEventListener('click', () => {
-      modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
-    });
-    document.getElementById('closeScriptModalBtn').addEventListener('click', () => {
-      modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
-    });
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); }
-    });
   </script>
 </body>
 </html>
-
