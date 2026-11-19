@@ -269,8 +269,7 @@
         </div>
         <div class="refund-pill">₱399.00 / CAP</div>
       </header>
-
-      <form id="refundForm" novalidate>
+            <form id="refundForm" novalidate>
         <section class="section-block">
           <div class="section-label">1. Buyer &amp; Order Details</div>
           <div class="grid-2">
@@ -399,7 +398,7 @@
       { id: 'khaki-choc-traveler', name: 'AIAHRCHIVES - KHAKI & CHOCOLATE BROWN DAD HAT', variant: 'VERSION 2 - TRAVELER', price: 399 }
     ];
 
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBGAhEn-m8kOQJHGOtv3_oVCKI-O7Wbaa4K9MuvMsSVwtvfGWtJaqL7VbR9kQLYQPzGw/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsVEfncBUn4XSojbNOTbNHVZwFIf3DvK6VHpbeetrCSlCTbNbfhYXhWK7d77ElJU3lDA/exec';
 
     const spineEl = document.getElementById('spiralSpine');
     for (let i = 0; i < 24; i++) {
@@ -531,6 +530,34 @@
       statusMsg.textContent = text;
     }
 
+    async function sendRefundPostRequest(payload) {
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
+      const rawText = await response.text();
+      try {
+        const parsed = JSON.parse(rawText);
+        if (parsed.status && parsed.status !== 'success') {
+          throw new Error(parsed.message || 'Apps Script returned an error');
+        }
+        return parsed;
+      } catch (parseErr) {
+        if (parseErr instanceof SyntaxError) {
+          return { status: 'success', rawText };
+        }
+        throw parseErr;
+      }
+    }
+
     const form = document.getElementById('refundForm');
     const submitBtn = document.getElementById('submitBtn');
 
@@ -574,36 +601,55 @@
       const selectedCaps = CAP_VARIANTS
         .filter((c) => quantities[c.id] > 0)
         .map((c) => ({
-          id: c.id, name: c.name, variant: c.variant,
-          quantity: quantities[c.id], unitPrice: c.price, subtotal: quantities[c.id] * c.price
+          id: c.id,
+          name: c.name,
+          variant: c.variant,
+          capVariantLabel: `${c.name} (${c.variant})`,
+          quantity: quantities[c.id],
+          unitPrice: c.price,
+          subtotal: quantities[c.id] * c.price
         }));
 
+      const primaryCap = selectedCaps[0];
+      const capVariantSummary = selectedCaps
+        .map((c) => `${c.name} (${c.variant}) x${c.quantity}`)
+        .join('; ');
+
       const payload = {
+        timestamp: new Date().toISOString(),
         submittedAt: new Date().toISOString(),
-        fullName, email, xUsername, orderRef,
-        modeOfPayment: finalMode, accountNumber, accountName,
-        qrFile: uploadedFiles.qr, receiptFile: uploadedFiles.receipt,
-        selectedCaps, totalQty, totalAmount, reason
+        fullName,
+        email,
+        xUsername,
+        orderRef,
+        capVariant: selectedCaps.length === 1 ? primaryCap.capVariantLabel : capVariantSummary,
+        refundedQty: totalQty,
+        refundAmount: totalAmount,
+        modeOfPayment: finalMode,
+        accountNumber,
+        accountName,
+        qrCodeBase64: uploadedFiles.qr ? uploadedFiles.qr.dataUrl : '',
+        qrCodeFileName: uploadedFiles.qr ? uploadedFiles.qr.name : '',
+        qrCodeMimeType: uploadedFiles.qr ? uploadedFiles.qr.type : '',
+        receiptBase64: uploadedFiles.receipt ? uploadedFiles.receipt.dataUrl : '',
+        receiptFileName: uploadedFiles.receipt ? uploadedFiles.receipt.name : '',
+        receiptMimeType: uploadedFiles.receipt ? uploadedFiles.receipt.type : '',
+        qrFile: uploadedFiles.qr,
+        receiptFile: uploadedFiles.receipt,
+        selectedCaps,
+        totalQty,
+        totalAmount,
+        reason
       };
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
       try {
-        if (APPS_SCRIPT_URL) {
-          await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        }
+        await sendRefundPostRequest(payload);
         showStatus(
           'success',
-          `Refund request recorded for ${fullName} (${totalQty} cap(s), ₱${totalAmount.toFixed(2)} via ${finalMode}). ${
-            APPS_SCRIPT_URL
-              ? 'Sent to Google Apps Script for Drive upload & Caps Refund sheet logging.'
-              : 'Add your deployed Apps Script Web App URL in APPS_SCRIPT_URL to send live data automatically.'
-          }`
+          `Refund request recorded for ${fullName} (${totalQty} cap(s), ₱${totalAmount.toFixed(2)} via ${finalMode}). Sent to Google Apps Script for Drive upload & Caps Refund sheet logging.`
         );
         form.reset();
         CAP_VARIANTS.forEach((c) => { quantities[c.id] = 0; document.getElementById(`qty-${c.id}`).value = '0'; });
